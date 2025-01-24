@@ -5,8 +5,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { RequireAuth } from "@/components/RequireAuth";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
@@ -20,10 +23,20 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route
-              path="/"
+              path="/*"
               element={
                 <RequireAuth>
-                  <Index />
+                  <SidebarProvider>
+                    <div className="flex min-h-screen w-full">
+                      <AppSidebar />
+                      <main className="flex-1">
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/chat" element={<Chat />} />
+                        </Routes>
+                      </main>
+                    </div>
+                  </SidebarProvider>
                 </RequireAuth>
               }
             />
