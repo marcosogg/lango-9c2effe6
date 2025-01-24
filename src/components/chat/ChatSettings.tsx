@@ -13,7 +13,11 @@ export function ChatSettings() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+        <Button 
+          variant="ghost" 
+          size="icon"
+          className="text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+        >
           <Settings2 className="h-5 w-5" />
         </Button>
       </SheetTrigger>

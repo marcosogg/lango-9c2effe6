@@ -19,17 +19,14 @@ const Chat = () => {
   const handleSendMessage = async (content: string) => {
     try {
       setIsLoading(true)
-      // Add user message
       setMessages((prev) => [...prev, { content, isUser: true }])
 
-      // Get AI response
       const { data, error } = await supabase.functions.invoke("chat-completion", {
         body: { message: content },
       })
 
       if (error) throw error
 
-      // Add AI response
       setMessages((prev) => [
         ...prev,
         { content: data.response, isUser: false },
@@ -47,23 +44,42 @@ const Chat = () => {
   }
 
   return (
-    <div className="relative flex h-screen flex-col">
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.map((message, index) => (
-          <ChatMessage
-            key={index}
-            message={message.content}
-            isUser={message.isUser}
-          />
-        ))}
-        {isLoading && (
-          <div className="flex w-full gap-2 p-4">
-            <Skeleton className="h-[60px] w-[80%] rounded-lg" />
+    <div className="flex-1 flex flex-col h-screen bg-gray-50">
+      <header className="border-b p-4 bg-white">
+        <div className="flex items-center justify-between max-w-5xl mx-auto w-full">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
+              AI
+            </div>
+            <div>
+              <h2 className="font-semibold text-gray-800">AI Assistant</h2>
+              <p className="text-sm text-gray-500">Online</p>
+            </div>
           </div>
-        )}
+          <ChatSettings />
+        </div>
+      </header>
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-5xl mx-auto">
+          {messages.map((message, index) => (
+            <ChatMessage
+              key={index}
+              message={message.content}
+              isUser={message.isUser}
+            />
+          ))}
+          {isLoading && (
+            <div className="p-4">
+              <Skeleton className="h-[60px] w-[80%] rounded-lg" />
+            </div>
+          )}
+        </div>
       </div>
-      <ChatInput onSend={handleSendMessage} disabled={isLoading} />
-      <ChatSettings />
+      <div className="border-t bg-white p-4">
+        <div className="max-w-5xl mx-auto">
+          <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+        </div>
+      </div>
     </div>
   )
 }
