@@ -94,6 +94,7 @@ const Chat = () => {
           <ChatInput
             onSend={handleSendMessage}
             disabled={addMessage.isPending}
+            messages={messages}
           />
         </div>
       </div>
