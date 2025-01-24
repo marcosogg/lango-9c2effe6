@@ -26,9 +26,9 @@ enabled = true
 enabled = true
 
 [[functions]]
-name = "generate-suggestion"
+[functions.generate-suggestion]
 verify_jwt = true
 
 [[functions]]
-name = "generate-banner"
+[functions.generate-banner]
 verify_jwt = true
