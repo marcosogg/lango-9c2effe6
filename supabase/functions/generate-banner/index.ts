@@ -34,7 +34,7 @@ serve(async (req) => {
       )
     }
 
-    const prompt = `Educational image on the topic of "${topic}", focusing on "${title}". Clean, professional style..`
+    const prompt = `Image of a "${title}".`
     
     console.log("Generating image with prompt:", prompt)
     
