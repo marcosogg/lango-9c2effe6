@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Book, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 
 const Courses = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -16,6 +17,7 @@ const Courses = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth(); // Get the current user
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["courses"],
@@ -32,9 +34,15 @@ const Courses = () => {
 
   const createCourseMutation = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("User not authenticated");
+
       const { data: course, error: courseError } = await supabase
         .from("courses")
-        .insert([{ title, topic }])
+        .insert([{ 
+          title, 
+          topic,
+          user_id: user.id // Include the user_id
+        }])
         .select()
         .single();
 
