@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/lib/auth"
 
 interface ChatThread {
   id: string
@@ -12,6 +13,7 @@ interface ChatThread {
 export function useChatThreads() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const { data: threads, isLoading } = useQuery({
     queryKey: ["chat-threads"],
@@ -28,9 +30,11 @@ export function useChatThreads() {
 
   const createThread = useMutation({
     mutationFn: async () => {
+      if (!user) throw new Error("User not authenticated")
+      
       const { data, error } = await supabase
         .from("chat_threads")
-        .insert([{}])
+        .insert([{ user_id: user.id }])
         .select()
         .single()
 
