@@ -1,4 +1,34 @@
 project_id = "cqpzzpyieykuqakoslxd"
 
-[functions.translate]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+
+[realtime]
+enabled = true
+
+[[functions]]
+name = "generate-suggestion"
+verify_jwt = true
+
+[[functions]]
+name = "generate-banner"
+verify_jwt = true

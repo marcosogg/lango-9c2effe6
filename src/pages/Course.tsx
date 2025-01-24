@@ -1,21 +1,19 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { Award, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import confetti from "canvas-confetti";
+import { useToast } from "@/hooks/use-toast";
+import { useState, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 const Course = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
-  const [showResult, setShowResult] = useState(false);
+  const [isAnswered, setIsAnswered] = useState(false);
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ["course", id],
@@ -44,183 +42,153 @@ const Course = () => {
     },
   });
 
-  const currentQuestion = questions?.[currentQuestionIndex];
-
-  const shuffleAnswers = (question: any) => {
-    if (!question) return [];
-    const answers = [
-      { text: question.correct_answer, isCorrect: true },
-      { text: question.wrong_answer_1, isCorrect: false },
-      { text: question.wrong_answer_2, isCorrect: false },
-      { text: question.wrong_answer_3, isCorrect: false },
-    ];
-    return answers.sort(() => Math.random() - 0.5);
-  };
-
-  const [shuffledAnswers, setShuffledAnswers] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (currentQuestion) {
-      setShuffledAnswers(shuffleAnswers(currentQuestion));
-    }
-  }, [currentQuestion]);
-
-  const handleAnswerSelect = (answer: string, isCorrect: boolean) => {
-    if (!currentQuestion) return;
-    
-    setSelectedAnswer(answer);
-    
-    if (isCorrect) {
-      setScore(score + 1);
-      toast({
-        title: "Correct! 🎉",
-        description: "Great job! Keep going!",
+  const generateBannerMutation = useMutation({
+    mutationFn: async () => {
+      if (!course) return;
+      
+      const { data, error } = await supabase.functions.invoke("generate-banner", {
+        body: { topic: course.topic, title: course.title },
       });
-    } else {
+      
+      if (error) throw error;
+      
+      // Update the course with the new banner URL
+      const { error: updateError } = await supabase
+        .from("courses")
+        .update({ banner_url: data.url })
+        .eq("id", course.id);
+      
+      if (updateError) throw updateError;
+      
+      return data.url;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["course", id] });
+    },
+    onError: (error) => {
       toast({
-        title: "Not quite right",
-        description: `The correct answer was: ${currentQuestion.correct_answer}`,
+        title: "Error generating banner",
+        description: "Failed to generate course banner. Please try again.",
         variant: "destructive",
       });
-    }
+      console.error("Error generating banner:", error);
+    },
+  });
 
-    setTimeout(() => {
-      if (questions && currentQuestionIndex < questions.length - 1) {
-        setCurrentQuestionIndex(currentQuestionIndex + 1);
-        setSelectedAnswer(null);
-      } else {
-        setShowResult(true);
-        if (score >= 7) {
-          confetti({
-            particleCount: 100,
-            spread: 70,
-            origin: { y: 0.6 },
-          });
-        }
-      }
-    }, 1500);
-  };
+  useEffect(() => {
+    if (course && !course.banner_url && !generateBannerMutation.isPending) {
+      generateBannerMutation.mutate();
+    }
+  }, [course]);
 
   if (courseLoading || questionsLoading) {
     return (
-      <div className="container mx-auto p-6 flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
-  if (!course || !questions) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="max-w-2xl mx-auto">
-          <CardContent className="p-6">
-            <p className="text-center text-muted-foreground">
-              Course not found or no questions available.
-            </p>
-            <Button 
-              onClick={() => navigate("/courses")} 
-              className="w-full mt-4"
-            >
-              Back to Courses
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (!course || !questions || questions.length === 0) {
+    return <div className="p-6">Course or questions not found.</div>;
   }
 
-  if (showResult) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Award className="h-6 w-6" />
-              Course Complete!
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-xl">
-              You scored {score} out of {questions.length}!
-            </p>
-            <p className="text-muted-foreground">
-              {score >= 7
-                ? "Excellent work! You've mastered this topic! 🎉"
-                : "Keep practicing to improve your score!"}
-            </p>
-            <Button onClick={() => navigate("/courses")} className="w-full">
-              Back to Courses
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const currentQuestion = questions[currentQuestionIndex];
+  const answers = [
+    currentQuestion.correct_answer,
+    currentQuestion.wrong_answer_1,
+    currentQuestion.wrong_answer_2,
+    currentQuestion.wrong_answer_3,
+  ].sort(() => Math.random() - 0.5);
 
-  if (!currentQuestion) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card className="max-w-2xl mx-auto">
-          <CardContent className="p-6">
-            <p className="text-center text-muted-foreground">
-              No questions available for this course.
-            </p>
-            <Button 
-              onClick={() => navigate("/courses")} 
-              className="w-full mt-4"
-            >
-              Back to Courses
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const handleAnswerSelect = (answer: string) => {
+    if (isAnswered) return;
+    
+    setSelectedAnswer(answer);
+    setIsAnswered(true);
+    
+    if (answer === currentQuestion.correct_answer) {
+      toast({
+        title: "Correct!",
+        description: "Well done! Let's move on to the next question.",
+      });
+    } else {
+      toast({
+        title: "Incorrect",
+        description: `The correct answer was: ${currentQuestion.correct_answer}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+      setSelectedAnswer(null);
+      setIsAnswered(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto p-6">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/courses")}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Courses
-      </Button>
-
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            {course.title}
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Question {currentQuestionIndex + 1} of {questions.length}
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-lg font-medium">{currentQuestion.question}</p>
-          <div className="space-y-3">
-            {shuffledAnswers.map((answer, index) => (
-              <Button
-                key={index}
-                variant={
-                  selectedAnswer === answer.text
-                    ? answer.isCorrect
-                      ? "default"
-                      : "destructive"
-                    : "outline"
-                }
-                className="w-full justify-start text-left"
-                disabled={selectedAnswer !== null}
-                onClick={() => handleAnswerSelect(answer.text, answer.isCorrect)}
-              >
-                {answer.text}
-              </Button>
-            ))}
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+        {course.banner_url ? (
+          <img
+            src={course.banner_url}
+            alt={course.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Question {currentQuestionIndex + 1} of {questions.length}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-lg font-medium">{currentQuestion.question}</p>
+            <div className="grid grid-cols-1 gap-4">
+              {answers.map((answer, index) => (
+                <Button
+                  key={index}
+                  variant={
+                    isAnswered
+                      ? answer === currentQuestion.correct_answer
+                        ? "default"
+                        : answer === selectedAnswer
+                        ? "destructive"
+                        : "outline"
+                      : selectedAnswer === answer
+                      ? "default"
+                      : "outline"
+                  }
+                  className="w-full justify-start px-4 py-6 text-left"
+                  onClick={() => handleAnswerSelect(answer)}
+                  disabled={isAnswered}
+                >
+                  {answer}
+                </Button>
+              ))}
+            </div>
+            {isAnswered && (
+              <Button
+                className="w-full mt-4"
+                onClick={handleNextQuestion}
+                disabled={currentQuestionIndex === questions.length - 1}
+              >
+                {currentQuestionIndex === questions.length - 1
+                  ? "Course Complete!"
+                  : "Next Question"}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

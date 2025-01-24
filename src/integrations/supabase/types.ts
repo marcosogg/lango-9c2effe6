@@ -70,6 +70,7 @@ export type Database = {
       }
       courses: {
         Row: {
+          banner_url: string | null
           created_at: string
           id: string
           title: string
@@ -78,6 +79,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          banner_url?: string | null
           created_at?: string
           id?: string
           title: string
@@ -86,6 +88,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          banner_url?: string | null
           created_at?: string
           id?: string
           title?: string
