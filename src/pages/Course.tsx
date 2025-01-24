@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Award, ArrowLeft, Sparkles } from "lucide-react";
+import { Award, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
@@ -17,7 +17,7 @@ const Course = () => {
   const [score, setScore] = useState(0);
   const [showResult, setShowResult] = useState(false);
 
-  const { data: course } = useQuery({
+  const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ["course", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,7 +31,7 @@ const Course = () => {
     },
   });
 
-  const { data: questions } = useQuery({
+  const { data: questions, isLoading: questionsLoading } = useQuery({
     queryKey: ["questions", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -66,6 +66,8 @@ const Course = () => {
   }, [currentQuestion]);
 
   const handleAnswerSelect = (answer: string, isCorrect: boolean) => {
+    if (!currentQuestion) return;
+    
     setSelectedAnswer(answer);
     
     if (isCorrect) {
@@ -83,7 +85,7 @@ const Course = () => {
     }
 
     setTimeout(() => {
-      if (currentQuestionIndex < (questions?.length || 0) - 1) {
+      if (questions && currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
         setSelectedAnswer(null);
       } else {
@@ -99,8 +101,32 @@ const Course = () => {
     }, 1500);
   };
 
+  if (courseLoading || questionsLoading) {
+    return (
+      <div className="container mx-auto p-6 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   if (!course || !questions) {
-    return <div>Loading...</div>;
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">
+              Course not found or no questions available.
+            </p>
+            <Button 
+              onClick={() => navigate("/courses")} 
+              className="w-full mt-4"
+            >
+              Back to Courses
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (showResult) {
@@ -123,6 +149,26 @@ const Course = () => {
                 : "Keep practicing to improve your score!"}
             </p>
             <Button onClick={() => navigate("/courses")} className="w-full">
+              Back to Courses
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!currentQuestion) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="p-6">
+            <p className="text-center text-muted-foreground">
+              No questions available for this course.
+            </p>
+            <Button 
+              onClick={() => navigate("/courses")} 
+              className="w-full mt-4"
+            >
               Back to Courses
             </Button>
           </CardContent>
