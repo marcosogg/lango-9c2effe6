@@ -10,13 +10,15 @@ interface ChatMessage {
   created_at: string
 }
 
-export function useChatMessages(threadId: string) {
+export function useChatMessages(threadId: string | undefined) {
   const queryClient = useQueryClient()
   const { toast } = useToast()
 
   const { data: messages, isLoading } = useQuery({
     queryKey: ["chat-messages", threadId],
     queryFn: async () => {
+      if (!threadId) return []
+      
       const { data, error } = await supabase
         .from("chat_messages")
         .select("*")
@@ -39,6 +41,8 @@ export function useChatMessages(threadId: string) {
       isUser: boolean
       audioUrl?: string
     }) => {
+      if (!threadId) throw new Error("No thread selected")
+
       const { data, error } = await supabase
         .from("chat_messages")
         .insert([
