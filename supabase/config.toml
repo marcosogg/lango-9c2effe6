@@ -1,14 +1,4 @@
 project_id = "cqpzzpyieykuqakoslxd"
 
-[api]
-enabled = true
-url = "https://cqpzzpyieykuqakoslxd.supabase.co"
-
-[db]
-port = 6543
-
-[functions]
-[functions.text-to-speech]
-verify_jwt = false
 [functions.translate]
 verify_jwt = false
