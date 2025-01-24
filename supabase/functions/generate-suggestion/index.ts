@@ -33,7 +33,7 @@ serve(async (req) => {
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that generates educational quiz questions."
+          content: "You are a helpful assistant that generates educational quiz questions. Your response must be a valid JSON array containing objects with the specified structure, nothing else."
         },
         {
           role: "user",
@@ -43,21 +43,42 @@ serve(async (req) => {
     });
 
     const response = completion.data.choices[0].message?.content;
-    console.log('Received response from OpenAI');
+    console.log('Raw OpenAI response:', response);
 
     if (!response) {
       throw new Error('No response from OpenAI');
     }
 
     try {
-      const questions = JSON.parse(response);
-      console.log('Successfully parsed questions');
+      // Try to clean the response if it contains markdown or extra text
+      let cleanedResponse = response;
+      if (response.includes('```json')) {
+        cleanedResponse = response.split('```json')[1].split('```')[0].trim();
+      } else if (response.includes('```')) {
+        cleanedResponse = response.split('```')[1].trim();
+      }
+      console.log('Cleaned response:', cleanedResponse);
+
+      const questions = JSON.parse(cleanedResponse);
+      console.log('Successfully parsed questions:', questions);
       
+      // Validate the structure of the parsed questions
+      if (!Array.isArray(questions)) {
+        throw new Error('Response is not an array');
+      }
+
+      questions.forEach((q, index) => {
+        if (!q.question || !q.correct_answer || !Array.isArray(q.wrong_answers) || q.wrong_answers.length !== 3) {
+          throw new Error(`Question at index ${index} has invalid structure`);
+        }
+      });
+
       return new Response(JSON.stringify(questions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     } catch (parseError) {
       console.error('Error parsing OpenAI response:', parseError);
+      console.error('Failed response structure:', response);
       throw new Error('Failed to parse generated questions');
     }
   } catch (error) {
