@@ -10,6 +10,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
+import Courses from "./pages/Courses";
+import Course from "./pages/Course";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,8 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Index />} />
                           <Route path="/chat" element={<Chat />} />
+                          <Route path="/courses" element={<Courses />} />
+                          <Route path="/courses/:id" element={<Course />} />
                         </Routes>
                       </main>
                     </div>

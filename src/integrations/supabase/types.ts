@@ -68,6 +68,74 @@ export type Database = {
         }
         Relationships: []
       }
+      courses: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      questions: {
+        Row: {
+          correct_answer: string
+          course_id: string
+          created_at: string
+          id: string
+          question: string
+          wrong_answer_1: string
+          wrong_answer_2: string
+          wrong_answer_3: string
+        }
+        Insert: {
+          correct_answer: string
+          course_id: string
+          created_at?: string
+          id?: string
+          question: string
+          wrong_answer_1: string
+          wrong_answer_2: string
+          wrong_answer_3: string
+        }
+        Update: {
+          correct_answer?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+          wrong_answer_1?: string
+          wrong_answer_2?: string
+          wrong_answer_3?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
