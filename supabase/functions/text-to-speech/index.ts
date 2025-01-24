@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { OpenAI } from "https://deno.land/x/openai@v4.24.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,26 +14,22 @@ serve(async (req) => {
   try {
     const { text } = await req.json()
 
-    const response = await fetch('https://api.openai.com/v1/audio/speech', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'tts-1',
-        input: text,
-        voice: 'alloy',
-        response_format: 'mp3',
-      }),
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error?.message || 'Failed to generate speech')
+    if (!text) {
+      throw new Error('Text is required')
     }
 
-    const arrayBuffer = await response.arrayBuffer()
+    const openai = new OpenAI({
+      apiKey: Deno.env.get('OPENAI_API_KEY')
+    })
+
+    const mp3 = await openai.audio.speech.create({
+      model: 'tts-1',
+      voice: 'alloy',
+      input: text,
+      response_format: 'mp3',
+    })
+
+    const arrayBuffer = await mp3.arrayBuffer()
     const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
 
     return new Response(
@@ -41,6 +37,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('Error in text-to-speech:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
