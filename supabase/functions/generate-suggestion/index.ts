@@ -14,73 +14,56 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, messages } = await req.json();
+    const { topic, count = 10 } = await req.json();
+    console.log('Received request with topic:', topic);
 
-    // If messages array is provided, generate a chat suggestion
-    if (messages) {
-      const lastMessages = messages.slice(-3); // Get last 3 messages for context
-      const prompt = `Based on this conversation, suggest a helpful response:
-        ${lastMessages.map(m => `${m.is_user ? 'User' : 'Assistant'}: ${m.content}`).join('\n')}`;
+    if (!topic) {
+      throw new Error('Topic is required');
+    }
 
-      const openai = new OpenAIApi(
-        new Configuration({
-          apiKey: Deno.env.get('OPENAI_API_KEY'),
-        })
-      );
+    const openai = new OpenAIApi(
+      new Configuration({
+        apiKey: Deno.env.get('OPENAI_API_KEY'),
+      })
+    );
 
-      const completion = await openai.createChatCompletion({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a helpful assistant." },
-          { role: "user", content: prompt }
-        ],
-      });
+    console.log('Sending request to OpenAI...');
+    const completion = await openai.createChatCompletion({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a helpful assistant that generates educational quiz questions."
+        },
+        {
+          role: "user",
+          content: `Generate ${count} multiple choice questions about ${topic}. Format your response as a JSON array where each object has the structure: { "question": "...", "correct_answer": "...", "wrong_answers": ["...", "...", "..."] }. Make the questions engaging and educational.`
+        }
+      ],
+    });
 
-      const suggestion = completion.data.choices[0].message?.content || "";
+    const response = completion.data.choices[0].message?.content;
+    console.log('Received response from OpenAI');
+
+    if (!response) {
+      throw new Error('No response from OpenAI');
+    }
+
+    try {
+      const questions = JSON.parse(response);
+      console.log('Successfully parsed questions');
       
-      return new Response(JSON.stringify({ suggestion }), {
+      return new Response(JSON.stringify(questions), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    } catch (parseError) {
+      console.error('Error parsing OpenAI response:', parseError);
+      throw new Error('Failed to parse generated questions');
     }
-
-    // If topic is provided, generate quiz questions
-    if (topic) {
-      const openai = new OpenAIApi(
-        new Configuration({
-          apiKey: Deno.env.get('OPENAI_API_KEY'),
-        })
-      );
-
-      const prompt = `Generate 10 multiple choice questions about ${topic}. Each question should have one correct answer and three wrong answers. Format the response as a JSON array where each object has the structure: { "question": "...", "correct_answer": "...", "wrong_answers": ["...", "...", "..."] }. Make the questions engaging and fun, suitable for a quiz game. Ensure the wrong answers are plausible but clearly incorrect.`;
-
-      const completion = await openai.createChatCompletion({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "You are a helpful assistant that generates educational content." },
-          { role: "user", content: prompt }
-        ],
-      });
-
-      const response = completion.data.choices[0].message?.content || "";
-      console.log("OpenAI response:", response);
-
-      try {
-        const questions = JSON.parse(response);
-        return new Response(JSON.stringify(questions), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      } catch (parseError) {
-        console.error("Error parsing OpenAI response:", parseError);
-        throw new Error("Failed to parse generated questions");
-      }
-    }
-
-    throw new Error("Either 'topic' or 'messages' parameter is required");
-
   } catch (error) {
-    console.error("Error in generate-suggestion function:", error);
+    console.error('Error in generate-suggestion function:', error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
+      JSON.stringify({ error: error.message || 'Internal server error' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
