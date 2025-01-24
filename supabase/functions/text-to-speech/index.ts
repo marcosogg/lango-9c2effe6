@@ -30,7 +30,9 @@ serve(async (req) => {
     })
 
     const arrayBuffer = await mp3.arrayBuffer()
-    const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    const base64Audio = btoa(
+      String.fromCharCode(...new Uint8Array(arrayBuffer))
+    )
 
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
