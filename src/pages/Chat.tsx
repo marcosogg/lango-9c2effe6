@@ -4,22 +4,32 @@ import { ChatInput } from "@/components/chat/ChatInput"
 import { ChatMessage } from "@/components/chat/ChatMessage"
 import { ChatSettings } from "@/components/chat/ChatSettings"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useState } from "react"
-
-interface Message {
-  content: string
-  isUser: boolean
-}
+import { useState, useEffect } from "react"
+import { useChatThreads } from "@/hooks/use-chat-threads"
+import { useChatMessages } from "@/hooks/use-chat-messages"
+import { useAuth } from "@/lib/auth"
 
 const Chat = () => {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [currentThreadId, setCurrentThreadId] = useState<string>("")
+  const { threads, isLoading: isLoadingThreads, createThread } = useChatThreads()
+  const { messages, isLoading: isLoadingMessages, addMessage } = useChatMessages(currentThreadId)
+  const { user } = useAuth()
   const { toast } = useToast()
+
+  useEffect(() => {
+    if (threads && threads.length > 0 && !currentThreadId) {
+      setCurrentThreadId(threads[0].id)
+    }
+  }, [threads, currentThreadId])
 
   const handleSendMessage = async (content: string) => {
     try {
-      setIsLoading(true)
-      setMessages((prev) => [...prev, { content, isUser: true }])
+      if (!currentThreadId) {
+        const newThread = await createThread.mutateAsync()
+        setCurrentThreadId(newThread.id)
+      }
+
+      await addMessage.mutateAsync({ content, isUser: true })
 
       const { data, error } = await supabase.functions.invoke("chat-completion", {
         body: { message: content },
@@ -27,10 +37,10 @@ const Chat = () => {
 
       if (error) throw error
 
-      setMessages((prev) => [
-        ...prev,
-        { content: data.response, isUser: false },
-      ])
+      await addMessage.mutateAsync({
+        content: data.response,
+        isUser: false,
+      })
     } catch (error) {
       toast({
         title: "Error",
@@ -38,10 +48,10 @@ const Chat = () => {
         variant: "destructive",
       })
       console.error("Chat error:", error)
-    } finally {
-      setIsLoading(false)
     }
   }
+
+  if (!user) return null
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
@@ -56,28 +66,35 @@ const Chat = () => {
               <p className="text-sm text-gray-500">Online</p>
             </div>
           </div>
-          <ChatSettings />
+          <ChatSettings
+            currentThreadId={currentThreadId}
+            onThreadSelect={setCurrentThreadId}
+          />
         </div>
       </header>
       <div className="flex-1 overflow-y-auto">
         <div className="max-w-5xl mx-auto">
-          {messages.map((message, index) => (
-            <ChatMessage
-              key={index}
-              message={message.content}
-              isUser={message.isUser}
-            />
-          ))}
-          {isLoading && (
+          {isLoadingMessages || isLoadingThreads ? (
             <div className="p-4">
               <Skeleton className="h-[60px] w-[80%] rounded-lg" />
             </div>
+          ) : (
+            messages?.map((message) => (
+              <ChatMessage
+                key={message.id}
+                message={message.content}
+                isUser={message.is_user}
+              />
+            ))
           )}
         </div>
       </div>
       <div className="border-t bg-white p-4">
         <div className="max-w-5xl mx-auto">
-          <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+          <ChatInput
+            onSend={handleSendMessage}
+            disabled={addMessage.isPending}
+          />
         </div>
       </div>
     </div>

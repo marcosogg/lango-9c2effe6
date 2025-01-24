@@ -9,7 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          audio_url: string | null
+          content: string
+          created_at: string
+          id: string
+          is_user: boolean
+          thread_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_user?: boolean
+          thread_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_user?: boolean
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
