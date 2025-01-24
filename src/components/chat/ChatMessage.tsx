@@ -1,7 +1,8 @@
 import { useState, useRef } from "react"
-import { Play, Pause, RotateCcw, Volume2 } from "lucide-react"
+import { Play, Pause, RotateCcw, Volume2, Globe, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { supabase } from "@/integrations/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -14,8 +15,34 @@ export function ChatMessage({ message, isUser }: ChatMessageProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const [translation, setTranslation] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const { toast } = useToast()
+
+  const handleTranslate = async (targetLanguage: string) => {
+    try {
+      setIsTranslating(true)
+      setTranslation(null)
+
+      const { data, error } = await supabase.functions.invoke("translate", {
+        body: { text: message, targetLanguage },
+      })
+
+      if (error) throw error
+
+      setTranslation(data.translation)
+    } catch (error) {
+      console.error("Translation error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to translate message. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsTranslating(false)
+    }
+  }
 
   const handleGenerateAudio = async () => {
     try {
@@ -102,7 +129,11 @@ export function ChatMessage({ message, isUser }: ChatMessageProps) {
                 onClick={handleGenerateAudio}
                 disabled={isLoading}
               >
-                <Volume2 className="h-4 w-4" />
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
               </Button>
             ) : (
               <>
@@ -128,6 +159,45 @@ export function ChatMessage({ message, isUser }: ChatMessageProps) {
                 </Button>
               </>
             )}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                >
+                  <Globe className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Translate Message</h3>
+                  <div className="space-y-2">
+                    {["Spanish", "French", "German", "Italian", "Portuguese"].map((lang) => (
+                      <Button
+                        key={lang}
+                        variant="outline"
+                        className="w-full justify-start"
+                        onClick={() => handleTranslate(lang)}
+                        disabled={isTranslating}
+                      >
+                        {isTranslating ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Globe className="mr-2 h-4 w-4" />
+                        )}
+                        {lang}
+                      </Button>
+                    ))}
+                  </div>
+                  {translation && (
+                    <div className="mt-4 rounded-lg border p-4">
+                      <p className="text-sm">{translation}</p>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
             <audio
               ref={audioRef}
               onEnded={handleAudioEnded}
