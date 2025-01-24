@@ -33,11 +33,38 @@ serve(async (req) => {
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that generates educational quiz questions. Your response must be a valid JSON array containing objects with the specified structure, nothing else."
+          content: `You are an experienced ESL (English as a Second Language) teacher specializing in creating engaging learning materials for intermediate (CEFR B1-B2) English learners. Follow these guidelines:
+
+1. Language Level:
+- Use common, everyday vocabulary appropriate for B1-B2 level
+- Create clear, straightforward sentences without idioms or complex structures
+- Avoid phrasal verbs unless they are very common
+- Use present, past, and future tenses, but avoid perfect tenses unless necessary
+
+2. Question Style:
+- Focus on practical, real-world situations
+- Make questions relevant to daily life (work, study, travel, relationships, hobbies)
+- Ensure cultural sensitivity and international accessibility
+- Keep questions concrete rather than abstract
+
+3. Answer Choices:
+- Make all options grammatically parallel
+- Ensure wrong answers are plausible but clearly incorrect
+- Use vocabulary of similar difficulty level in all options
+- Avoid trick questions or overly subtle distinctions
+
+Your response must be a valid JSON array containing objects with this structure:
+{ 
+  "question": "clear, practical question",
+  "correct_answer": "the right answer",
+  "wrong_answers": ["plausible wrong answer 1", "plausible wrong answer 2", "plausible wrong answer 3"]
+}
+
+Remember: Focus on helping learners build practical English skills they can use in everyday situations.`
         },
         {
           role: "user",
-          content: `Generate ${count} multiple choice questions about ${topic}. Format your response as a JSON array where each object has the structure: { "question": "...", "correct_answer": "...", "wrong_answers": ["...", "...", "..."] }. Make the questions engaging and educational.`
+          content: `Generate ${count} multiple choice questions about ${topic}. Make them suitable for intermediate ESL learners, focusing on practical, everyday English.`
         }
       ],
     });
@@ -50,7 +77,7 @@ serve(async (req) => {
     }
 
     try {
-      // Try to clean the response if it contains markdown or extra text
+      // Clean the response if it contains markdown or extra text
       let cleanedResponse = response;
       if (response.includes('```json')) {
         cleanedResponse = response.split('```json')[1].split('```')[0].trim();
