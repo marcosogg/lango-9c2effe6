@@ -6,6 +6,21 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  let binary = '';
+  // Process in chunks of 1024 bytes to prevent stack overflow
+  const chunkSize = 1024;
+  
+  for (let i = 0; i < len; i += chunkSize) {
+    const chunk = bytes.slice(i, Math.min(i + chunkSize, len));
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  
+  return btoa(binary);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -18,6 +33,8 @@ serve(async (req) => {
       throw new Error('Text is required')
     }
 
+    console.log('Generating speech for text:', text.substring(0, 50) + '...')
+
     const openai = new OpenAI({
       apiKey: Deno.env.get('OPENAI_API_KEY')
     })
@@ -29,10 +46,12 @@ serve(async (req) => {
       response_format: 'mp3',
     })
 
+    console.log('Successfully generated speech, converting to base64...')
+
     const arrayBuffer = await mp3.arrayBuffer()
-    const base64Audio = btoa(
-      String.fromCharCode(...new Uint8Array(arrayBuffer))
-    )
+    const base64Audio = arrayBufferToBase64(arrayBuffer)
+
+    console.log('Successfully converted to base64, sending response...')
 
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
