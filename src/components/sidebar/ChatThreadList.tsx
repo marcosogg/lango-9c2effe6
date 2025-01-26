@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useChatThreads } from "@/hooks/use-chat-threads";
 import { ChatThreadItem } from "./ChatThreadItem";
+import { Separator } from "@/components/ui/separator";
 
 interface ChatThreadListProps {
   currentThreadId: string;
@@ -23,26 +24,32 @@ export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
       <Button
         onClick={handleCreateThread}
         disabled={createThread.isPending}
-        className="w-full"
+        className="w-full bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
       >
-        <Plus className="h-4 w-4 mr-2" />
-        New Thread
+        <Plus className="mr-2 h-4 w-4" />
+        New Chat
       </Button>
-      <ScrollArea className="h-[500px] pr-4">
-        <div className="space-y-2">
-          {threads?.map((thread) => (
-            <ChatThreadItem
-              key={thread.id}
-              id={thread.id}
-              name={thread.name}
-              createdAt={thread.created_at}
-              isActive={currentThreadId === thread.id}
-              onRename={(id, name) => updateThread.mutate({ id, name })}
-              onDelete={(id) => deleteThread.mutate(id)}
-            />
-          ))}
+      <div className="space-y-4">
+        <div className="px-2">
+          <h2 className="text-sm font-semibold text-sidebar-foreground/70">Chat History</h2>
         </div>
-      </ScrollArea>
+        <Separator className="bg-sidebar-border" />
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-1">
+            {threads?.map((thread) => (
+              <ChatThreadItem
+                key={thread.id}
+                id={thread.id}
+                name={thread.name}
+                createdAt={thread.created_at}
+                isActive={currentThreadId === thread.id}
+                onRename={(id, name) => updateThread.mutate({ id, name })}
+                onDelete={(id) => deleteThread.mutate(id)}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

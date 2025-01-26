@@ -14,18 +14,18 @@ export function AppSidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="h-screen w-[250px] border-r bg-sidebar text-sidebar-foreground">
-      <div className="flex h-full flex-col">
-        <div className="flex-1 space-y-1 p-2">
+    <div className="flex h-screen w-[280px] flex-col border-r bg-sidebar text-sidebar-foreground">
+      <div className="flex-1 space-y-4 p-4">
+        <nav className="space-y-1">
           <Link to="/">
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start",
+                "w-full justify-start text-base font-normal",
                 isActive("/") && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
             >
-              <Home className="mr-2 h-4 w-4" />
+              <Home className="mr-3 h-5 w-5" />
               Home
             </Button>
           </Link>
@@ -33,11 +33,11 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start",
+                "w-full justify-start text-base font-normal",
                 isActive("/chat") && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
             >
-              <MessageSquare className="mr-2 h-4 w-4" />
+              <MessageSquare className="mr-3 h-5 w-5" />
               Chat
             </Button>
           </Link>
@@ -46,11 +46,11 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start",
+                "w-full justify-start text-base font-normal",
                 isActive("/voice-chat") && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
             >
-              <Mic className="mr-2 h-4 w-4" />
+              <Mic className="mr-3 h-5 w-5" />
               Voice Chat
             </Button>
           </Link>
@@ -58,18 +58,18 @@ export function AppSidebar() {
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start",
+                "w-full justify-start text-base font-normal",
                 isActive("/quizzes") && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
             >
-              <GraduationCap className="mr-2 h-4 w-4" />
+              <GraduationCap className="mr-3 h-5 w-5" />
               Quizzes
             </Button>
           </Link>
-        </div>
-        <div className="p-2">
-          <SignOut />
-        </div>
+        </nav>
+      </div>
+      <div className="p-4">
+        <SignOut />
       </div>
     </div>
   );

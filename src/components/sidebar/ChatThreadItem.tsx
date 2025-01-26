@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
@@ -45,11 +45,11 @@ export function ChatThreadItem({
   return (
     <div
       className={cn(
-        "group p-3 rounded-lg border",
-        isActive && "bg-gray-50"
+        "group relative rounded-lg transition-colors",
+        isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/50"
       )}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between p-2">
         {isEditing ? (
           <Input
             value={editingName}
@@ -57,27 +57,30 @@ export function ChatThreadItem({
             onKeyDown={handleKeyDown}
             onBlur={handleRename}
             autoFocus
+            className="h-8"
           />
         ) : (
           <Button
             variant="ghost"
-            className="w-full justify-start p-2 h-auto"
+            className="w-full justify-start p-2 text-base font-normal"
             asChild
           >
             <Link to={`/chat?thread=${id}`}>
-              <div>
-                <div className="font-medium text-left">{name}</div>
-                <div className="text-xs text-gray-500">
-                  {format(new Date(createdAt), "PPp")}
-                </div>
+              <MessageSquare className="mr-3 h-4 w-4 shrink-0" />
+              <div className="flex flex-col items-start">
+                <span className="line-clamp-1 text-sm">{name}</span>
+                <span className="text-xs text-sidebar-foreground/60">
+                  {format(new Date(createdAt), "MMM d, yyyy")}
+                </span>
               </div>
             </Link>
           </Button>
         )}
-        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute right-2 hidden space-x-1 group-hover:flex">
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={() => {
               setIsEditing(true);
               setEditingName(name);
@@ -88,6 +91,7 @@ export function ChatThreadItem({
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={() => onDelete(id)}
           >
             <Trash2 className="h-4 w-4" />
