@@ -9,7 +9,10 @@ import { QuizBanner } from "@/components/quiz/QuizBanner";
 import { QuizStartScreen } from "@/components/quiz/QuizStartScreen";
 import { QuizQuestion } from "@/components/quiz/QuizQuestion";
 import { DeleteQuizDialog } from "@/components/quiz/DeleteQuizDialog";
-import { TableRow } from "@/integrations/supabase/types";
+import { Database } from "@/integrations/supabase/types";
+
+type Quiz = Database['public']['Tables']['quizzes']['Row'];
+type Question = Database['public']['Tables']['questions']['Row'];
 
 const Quiz = () => {
   const { id } = useParams();
@@ -32,7 +35,7 @@ const Quiz = () => {
         .single();
       
       if (error) throw error;
-      return data as TableRow<"quizzes">;
+      return data as Quiz;
     },
   });
 
@@ -45,7 +48,7 @@ const Quiz = () => {
         .eq("quiz_id", id);
       
       if (error) throw error;
-      return data as TableRow<"questions">[];
+      return data as Question[];
     },
   });
 
