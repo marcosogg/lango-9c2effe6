@@ -6,14 +6,9 @@ import type { User } from "@supabase/supabase-js";
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType>({ 
-  user: null, 
-  isLoading: true,
-  signOut: async () => {} 
-});
+const AuthContext = createContext<AuthContextType>({ user: null, isLoading: true });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -36,13 +31,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
