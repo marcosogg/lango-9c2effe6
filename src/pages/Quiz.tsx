@@ -9,8 +9,9 @@ import { QuizBanner } from "@/components/quiz/QuizBanner";
 import { QuizStartScreen } from "@/components/quiz/QuizStartScreen";
 import { QuizQuestion } from "@/components/quiz/QuizQuestion";
 import { DeleteQuizDialog } from "@/components/quiz/DeleteQuizDialog";
+import { TableRow } from "@/integrations/supabase/types";
 
-const Course = () => {
+const Quiz = () => {
   const { id } = useParams();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Course = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const { data: quiz, isLoading: courseLoading } = useQuery({
+  const { data: quiz, isLoading: quizLoading } = useQuery({
     queryKey: ["quiz", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -31,7 +32,7 @@ const Course = () => {
         .single();
       
       if (error) throw error;
-      return data;
+      return data as TableRow<"quizzes">;
     },
   });
 
@@ -41,14 +42,14 @@ const Course = () => {
       const { data, error } = await supabase
         .from("questions")
         .select("*")
-        .eq("course_id", id);
+        .eq("quiz_id", id);
       
       if (error) throw error;
-      return data;
+      return data as TableRow<"questions">[];
     },
   });
 
-  const deleteCourse = useMutation({
+  const deleteQuiz = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
         .from("quizzes")
@@ -112,7 +113,7 @@ const Course = () => {
     }
   }, [quiz]);
 
-  if (courseLoading || questionsLoading) {
+  if (quizLoading || questionsLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -170,7 +171,7 @@ const Course = () => {
       <DeleteQuizDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        onConfirmDelete={() => deleteCourse.mutate()}
+        onConfirmDelete={() => deleteQuiz.mutate()}
       />
 
       <QuizBanner bannerUrl={quiz.banner_url} />
@@ -196,4 +197,4 @@ const Course = () => {
   );
 };
 
-export default Course;
+export default Quiz;
