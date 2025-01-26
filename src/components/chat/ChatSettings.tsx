@@ -7,7 +7,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { Settings2, Plus, Trash2, Pencil } from "lucide-react"
+import { Plus, Trash2, Pencil } from "lucide-react"
 import { useChatThreads } from "@/hooks/use-chat-threads"
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
@@ -43,15 +43,6 @@ export function ChatSettings({ currentThreadId, onThreadSelect }: ChatSettingsPr
 
   return (
     <Sheet>
-      <SheetTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-        >
-          <Settings2 className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Chat Threads</SheetTitle>
