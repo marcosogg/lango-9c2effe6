@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 
-const Courses = () => {
+const Quizzes = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [title, setTitle] = useState("");
   const [topic, setTopic] = useState("");
@@ -19,11 +19,11 @@ const Courses = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth(); // Get the current user
 
-  const { data: courses, isLoading } = useQuery({
-    queryKey: ["courses"],
+  const { data: quizzes, isLoading } = useQuery({
+    queryKey: ["quizzes"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("courses")
+        .from("quizzes")
         .select("*")
         .order("created_at", { ascending: false });
       
@@ -36,8 +36,8 @@ const Courses = () => {
     mutationFn: async () => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data: course, error: courseError } = await supabase
-        .from("courses")
+      const { data: quiz, error: courseError } = await supabase
+        .from("quizzes")
         .insert([{ 
           title, 
           topic,
@@ -63,7 +63,7 @@ const Courses = () => {
         .from("questions")
         .insert(
           questions.map((q: any) => ({
-            course_id: course.id,
+            course_id: quiz.id,
             question: q.question,
             correct_answer: q.correct_answer,
             wrong_answer_1: q.wrong_answers[0],
@@ -74,32 +74,32 @@ const Courses = () => {
 
       if (insertError) throw insertError;
 
-      return course;
+      return quiz;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["quizzes"] });
       setShowCreateForm(false);
       setTitle("");
       setTopic("");
       toast({
         title: "Course created!",
-        description: "Your course has been created successfully.",
+        description: "Your quiz has been created successfully.",
       });
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create course. Please try again.",
+        description: "Failed to create quiz. Please try again.",
         variant: "destructive",
       });
-      console.error("Error creating course:", error);
+      console.error("Error creating quiz:", error);
     },
   });
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">My Courses</h1>
+        <h1 className="text-3xl font-bold">My Quizzes</h1>
         <Button
           onClick={() => setShowCreateForm(!showCreateForm)}
           className="gap-2"
@@ -124,7 +124,7 @@ const Courses = () => {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter course title"
+                placeholder="Enter quiz title"
               />
             </div>
             <div className="space-y-2">
@@ -156,24 +156,24 @@ const Courses = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
-          <p>Loading courses...</p>
-        ) : courses?.length === 0 ? (
-          <p>No courses yet. Create your first course!</p>
+          <p>Loading quizzes...</p>
+        ) : quizzes?.length === 0 ? (
+          <p>No quizzes yet. Create your first quiz!</p>
         ) : (
-          courses?.map((course) => (
+          quizzes?.map((quiz) => (
             <Card
-              key={course.id}
+              key={quiz.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => navigate(`/courses/${course.id}`)}
+              onClick={() => navigate(`/quizzes/${quiz.id}`)}
             >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Book className="h-5 w-5" />
-                  {course.title}
+                  {quiz.title}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">{course.topic}</p>
+                <p className="text-sm text-muted-foreground">{quiz.topic}</p>
               </CardContent>
             </Card>
           ))
@@ -183,4 +183,4 @@ const Courses = () => {
   );
 };
 
-export default Courses;
+export default Quizzes;

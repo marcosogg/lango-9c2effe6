@@ -68,7 +68,7 @@ export type Database = {
         }
         Relationships: []
       }
-      courses: {
+      quizzes: {
         Row: {
           banner_url: string | null
           created_at: string
@@ -134,7 +134,7 @@ export type Database = {
             foreignKeyName: "questions_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
-            referencedRelation: "courses"
+            referencedRelation: "quizzes"
             referencedColumns: ["id"]
           },
         ]

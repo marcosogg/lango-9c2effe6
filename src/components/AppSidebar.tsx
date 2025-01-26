@@ -33,8 +33,8 @@ const navigationItems = [
     icon: MessageSquare,
   },
   {
-    title: "Courses",
-    url: "/courses",
+    title: "Quizzes",
+    url: "/quizzes",
     icon: BookOpen,
   },
 ];

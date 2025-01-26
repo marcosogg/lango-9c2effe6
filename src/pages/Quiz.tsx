@@ -21,11 +21,11 @@ const Course = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const { data: course, isLoading: courseLoading } = useQuery({
-    queryKey: ["course", id],
+  const { data: quiz, isLoading: courseLoading } = useQuery({
+    queryKey: ["quiz", id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("courses")
+        .from("quizzes")
         .select("*")
         .eq("id", id)
         .single();
@@ -51,7 +51,7 @@ const Course = () => {
   const deleteCourse = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from("courses")
+        .from("quizzes")
         .delete()
         .eq("id", id);
       
@@ -62,7 +62,7 @@ const Course = () => {
         title: "Quiz deleted",
         description: "The quiz has been successfully deleted.",
       });
-      navigate("/courses");
+      navigate("/quizzes");
     },
     onError: (error) => {
       toast({
@@ -76,30 +76,30 @@ const Course = () => {
 
   const generateBannerMutation = useMutation({
     mutationFn: async () => {
-      if (!course) return;
+      if (!quiz) return;
       
       const { data, error } = await supabase.functions.invoke("generate-banner", {
-        body: { topic: course.topic, title: course.title },
+        body: { topic: quiz.topic, title: quiz.title },
       });
       
       if (error) throw error;
       
       const { error: updateError } = await supabase
-        .from("courses")
+        .from("quizzes")
         .update({ banner_url: data.url })
-        .eq("id", course.id);
+        .eq("id", quiz.id);
       
       if (updateError) throw updateError;
       
       return data.url;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["course", id] });
+      queryClient.invalidateQueries({ queryKey: ["quiz", id] });
     },
     onError: (error) => {
       toast({
         title: "Error generating banner",
-        description: "Failed to generate course banner. Please try again.",
+        description: "Failed to generate quiz banner. Please try again.",
         variant: "destructive",
       });
       console.error("Error generating banner:", error);
@@ -107,10 +107,10 @@ const Course = () => {
   });
 
   useEffect(() => {
-    if (course && !course.banner_url && !generateBannerMutation.isPending) {
+    if (quiz && !quiz.banner_url && !generateBannerMutation.isPending) {
       generateBannerMutation.mutate();
     }
-  }, [course]);
+  }, [quiz]);
 
   if (courseLoading || questionsLoading) {
     return (
@@ -120,7 +120,7 @@ const Course = () => {
     );
   }
 
-  if (!course || !questions || questions.length === 0) {
+  if (!quiz || !questions || questions.length === 0) {
     return <div className="p-6">Quiz or questions not found.</div>;
   }
 
@@ -163,7 +163,7 @@ const Course = () => {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <QuizHeader 
-        title={course.title}
+        title={quiz.title}
         onDeleteClick={() => setShowDeleteDialog(true)}
       />
 
@@ -173,7 +173,7 @@ const Course = () => {
         onConfirmDelete={() => deleteCourse.mutate()}
       />
 
-      <QuizBanner bannerUrl={course.banner_url} />
+      <QuizBanner bannerUrl={quiz.banner_url} />
 
       {!isStarted ? (
         <QuizStartScreen
