@@ -20,7 +20,7 @@ export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="mt-6 space-y-4">
       <div className="space-y-4">
         <div className="px-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-sidebar-foreground/70">Chat History</h2>
