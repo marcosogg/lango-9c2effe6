@@ -1,4 +1,4 @@
-import { LogOut, LayoutDashboard, MessageSquare, BookOpen, Plus } from "lucide-react";
+import { LogOut, LayoutDashboard, MessageSquare, BookOpen, Plus, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,9 +14,12 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuAction,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 const navigationItems = [
   {
@@ -38,7 +41,9 @@ const navigationItems = [
 
 export function AppSidebar() {
   const navigate = useNavigate();
-  const { threads, isLoading, createThread } = useChatThreads();
+  const { threads, isLoading, createThread, updateThread, deleteThread } = useChatThreads();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const handleSignOut = async () => {
     try {
@@ -50,8 +55,26 @@ export function AppSidebar() {
     }
   };
 
-  const handleNewChat = () => {
-    createThread.mutate();
+  const handleNewChat = async () => {
+    try {
+      const newThread = await createThread.mutateAsync();
+      navigate(`/chat?thread=${newThread.id}`);
+    } catch (error) {
+      toast.error("Failed to create new chat");
+    }
+  };
+
+  const handleUpdateThread = (id: string) => {
+    if (editingName.trim()) {
+      updateThread.mutate({ id, name: editingName });
+      setEditingId(null);
+      setEditingName("");
+    }
+  };
+
+  const startEditing = (id: string, name: string) => {
+    setEditingId(id);
+    setEditingName(name);
   };
 
   return (
@@ -96,15 +119,50 @@ export function AppSidebar() {
               <SidebarMenu>
                 {threads?.map((thread) => (
                   <SidebarMenuItem key={thread.id}>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip={format(new Date(thread.created_at), "PPp")}
-                    >
-                      <a href={`/chat?thread=${thread.id}`}>
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="truncate">{thread.name}</span>
-                      </a>
-                    </SidebarMenuButton>
+                    {editingId === thread.id ? (
+                      <div className="flex items-center gap-2 px-2">
+                        <Input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              handleUpdateThread(thread.id);
+                            }
+                            if (e.key === "Escape") {
+                              setEditingId(null);
+                            }
+                          }}
+                          onBlur={() => handleUpdateThread(thread.id)}
+                          autoFocus
+                          className="h-8"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <SidebarMenuButton
+                          asChild
+                          tooltip={format(new Date(thread.created_at), "PPp")}
+                        >
+                          <a href={`/chat?thread=${thread.id}`}>
+                            <MessageSquare className="h-4 w-4" />
+                            <span className="truncate">{thread.name}</span>
+                          </a>
+                        </SidebarMenuButton>
+                        <SidebarMenuAction
+                          onClick={() => startEditing(thread.id, thread.name)}
+                          showOnHover
+                          className="right-8"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </SidebarMenuAction>
+                        <SidebarMenuAction
+                          onClick={() => deleteThread.mutate(thread.id)}
+                          showOnHover
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </SidebarMenuAction>
+                      </>
+                    )}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
