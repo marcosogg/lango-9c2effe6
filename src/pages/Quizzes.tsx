@@ -17,7 +17,7 @@ const Quizzes = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth(); // Get the current user
+  const { user } = useAuth();
 
   const { data: quizzes, isLoading } = useQuery({
     queryKey: ["quizzes"],
@@ -32,21 +32,21 @@ const Quizzes = () => {
     },
   });
 
-  const createCourseMutation = useMutation({
+  const createQuizMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data: quiz, error: courseError } = await supabase
+      const { data: quiz, error: quizError } = await supabase
         .from("quizzes")
         .insert([{ 
           title, 
           topic,
-          user_id: user.id // Include the user_id
+          user_id: user.id
         }])
         .select()
         .single();
 
-      if (courseError) throw courseError;
+      if (quizError) throw quizError;
 
       // Generate questions using the edge function
       const { data: questions, error: questionsError } = await supabase.functions.invoke(
@@ -58,12 +58,12 @@ const Quizzes = () => {
 
       if (questionsError) throw questionsError;
 
-      // Insert the generated questions
+      // Insert the generated questions with the correct quiz_id field
       const { error: insertError } = await supabase
         .from("questions")
         .insert(
           questions.map((q: any) => ({
-            course_id: quiz.id,
+            quiz_id: quiz.id, // Changed from course_id to quiz_id
             question: q.question,
             correct_answer: q.correct_answer,
             wrong_answer_1: q.wrong_answers[0],
@@ -82,7 +82,7 @@ const Quizzes = () => {
       setTitle("");
       setTopic("");
       toast({
-        title: "Course created!",
+        title: "Quiz created!",
         description: "Your quiz has been created successfully.",
       });
     },
@@ -114,12 +114,12 @@ const Quizzes = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              Create New Course
+              Create New Quiz
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Course Title</Label>
+              <Label htmlFor="title">Quiz Title</Label>
               <Input
                 id="title"
                 value={title}
@@ -137,16 +137,16 @@ const Quizzes = () => {
               />
             </div>
             <Button
-              onClick={() => createCourseMutation.mutate()}
-              disabled={!title || !topic || createCourseMutation.isPending}
+              onClick={() => createQuizMutation.mutate()}
+              disabled={!title || !topic || createQuizMutation.isPending}
               className="w-full"
             >
-              {createCourseMutation.isPending ? (
-                "Creating Course..."
+              {createQuizMutation.isPending ? (
+                "Creating Quiz..."
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Course
+                  Generate Quiz
                 </>
               )}
             </Button>
