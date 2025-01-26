@@ -1,9 +1,10 @@
-import { Link, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Home, MessageSquare, Mic, GraduationCap } from "lucide-react";
 import { SignOut } from "./sidebar/SignOut";
 import { ChatThreadList } from "./sidebar/ChatThreadList";
+import { useSearchParams } from "react-router-dom";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -40,6 +41,7 @@ export function AppSidebar() {
               Chat
             </Button>
           </Link>
+          {isActive("/chat") && <ChatThreadList currentThreadId={threadId} />}
           <Link to="/voice-chat">
             <Button
               variant="ghost"
@@ -65,7 +67,6 @@ export function AppSidebar() {
             </Button>
           </Link>
         </nav>
-        <ChatThreadList currentThreadId={threadId} />
       </div>
       <div className="p-4">
         <SignOut />
