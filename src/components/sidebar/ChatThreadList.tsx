@@ -20,8 +20,10 @@ export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
   };
 
   return (
-    <div className="mt-6 space-y-4">
-      <div className="space-y-4">
+    <div className="space-y-4">
+      {/* Removed the mt-6 here */}
+      <div className="mt-6 space-y-4"> 
+        {/* Added mt-6 here to push down the Chat history section  */}
         <div className="px-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-sidebar-foreground/70">Chat History</h2>
           <Button
