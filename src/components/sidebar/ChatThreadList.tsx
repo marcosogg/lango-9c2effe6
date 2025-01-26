@@ -21,17 +21,18 @@ export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
 
   return (
     <div className="space-y-4">
-      <Button
-        onClick={handleCreateThread}
-        disabled={createThread.isPending}
-        className="w-full bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
-      >
-        <Plus className="mr-2 h-4 w-4" />
-        New Chat
-      </Button>
       <div className="space-y-4">
-        <div className="px-2">
+        <div className="px-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-sidebar-foreground/70">Chat History</h2>
+          <Button
+            onClick={handleCreateThread}
+            disabled={createThread.isPending}
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
         <Separator className="bg-sidebar-border" />
         <ScrollArea className="h-[400px] pr-4">
