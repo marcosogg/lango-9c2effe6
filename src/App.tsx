@@ -10,6 +10,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
+import VoiceChat from "./pages/VoiceChat";
 import Quizzes from "./pages/Quizzes";
 import Quiz from "./pages/Quiz";
 
@@ -35,6 +36,7 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Index />} />
                           <Route path="/chat" element={<Chat />} />
+                          <Route path="/voice-chat" element={<VoiceChat />} />
                           <Route path="/quizzes" element={<Quizzes />} />
                           <Route path="/quizzes/:id" element={<Quiz />} />
                         </Routes>
