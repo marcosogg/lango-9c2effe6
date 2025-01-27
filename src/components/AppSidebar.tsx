@@ -29,6 +29,30 @@ export function AppSidebar() {
               Home
             </Button>
           </Link>
+          <Link to="/quizzes">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start text-base font-normal",
+                isActive("/quizzes") && "bg-sidebar-accent text-sidebar-accent-foreground"
+              )}
+            >
+              <GraduationCap className="mr-3 h-5 w-5" />
+              Quizzes
+            </Button>
+          </Link>
+          <Link to="/voice-chat">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start text-base font-normal",
+                isActive("/voice-chat") && "bg-sidebar-accent text-sidebar-accent-foreground"
+              )}
+            >
+              <Mic className="mr-3 h-5 w-5" />
+              Voice Chat
+            </Button>
+          </Link>
           <Link to="/chat">
             <Button
               variant="ghost"
@@ -42,30 +66,6 @@ export function AppSidebar() {
             </Button>
           </Link>
           {isActive("/chat") && <ChatThreadList currentThreadId={threadId} />}
-          <Link to="/voice-chat">
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start text-base font-normal",
-                isActive("/voice-chat") && "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-            >
-              <Mic className="mr-3 h-5 w-5" />
-              Voice Chat
-            </Button>
-          </Link>
-          <Link to="/quizzes">
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start text-base font-normal",
-                isActive("/quizzes") && "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-            >
-              <GraduationCap className="mr-3 h-5 w-5" />
-              Quizzes
-            </Button>
-          </Link>
         </nav>
       </div>
       <div className="p-4">
