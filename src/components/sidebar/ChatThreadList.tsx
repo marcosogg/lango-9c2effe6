@@ -5,12 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { useChatThreads } from "@/hooks/use-chat-threads";
 import { ChatThreadItem } from "./ChatThreadItem";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface ChatThreadListProps {
   currentThreadId: string;
+  className?: string;
 }
 
-export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
+export function ChatThreadList({ currentThreadId, className }: ChatThreadListProps) {
   const navigate = useNavigate();
   const { threads, createThread, updateThread, deleteThread } = useChatThreads();
 
@@ -20,7 +22,7 @@ export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", className)}>
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
           <h2 className="text-sm font-semibold text-sidebar-foreground/70">Chat History</h2>
