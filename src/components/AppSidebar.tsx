@@ -65,7 +65,7 @@ export function AppSidebar() {
               Chat
             </Button>
           </Link>
-          {isActive("/chat") && <ChatThreadList currentThreadId={threadId} />}
+          {isActive("/chat") && <ChatThreadList currentThreadId={threadId} className="mt-4" />}
         </nav>
       </div>
       <div className="p-4">
