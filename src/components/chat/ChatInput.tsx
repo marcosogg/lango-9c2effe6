@@ -1,58 +1,105 @@
-import React, { useState, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { SendHorizontal, Sparkles } from "lucide-react"
+import { useState } from "react"
+import { VoiceRecorder } from "./VoiceRecorder"
+import { cn } from "@/lib/utils"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface ChatInputProps {
-  onSubmit: (message: string) => void;
-  loading?: boolean;
+  onSend: (message: string) => void
+  disabled?: boolean
+  messages?: any[]
 }
 
+export function ChatInput({ onSend, disabled, messages = [] }: ChatInputProps) {
+  const [message, setMessage] = useState("")
+  const [isProcessingVoice, setIsProcessingVoice] = useState(false)
+  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false)
+  const { toast } = useToast()
 
-export function ChatInput({ onSubmit, loading }: ChatInputProps) {
-  const [message, setMessage] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
-  const handleSubmit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (message.trim() === "") return;
-    onSubmit(message);
-    setMessage("");
-    // focus back to textarea
-    if(textareaRef.current) {
-      textareaRef.current.focus();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (message.trim()) {
+      onSend(message)
+      setMessage("")
     }
-  };
+  }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && e.ctrlKey) {
-      e.preventDefault(); // Prevent new line
-      handleSubmit(e);
+  const handleVoiceTranscription = (text: string) => {
+    setIsProcessingVoice(true)
+    setMessage(text)
+    setIsProcessingVoice(false)
+  }
+
+  const generateSuggestion = async () => {
+    try {
+      setIsGeneratingSuggestion(true)
+      
+      const { data, error } = await supabase.functions.invoke("generate-suggestion", {
+        body: { messages },
+      })
+
+      if (error) throw error
+
+      setMessage(data.suggestion)
+    } catch (error) {
+      console.error("Error generating suggestion:", error)
+      toast({
+        title: "Error",
+        description: "Failed to generate suggestion. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsGeneratingSuggestion(false)
     }
-  };
-
+  }
 
   return (
-    <div className="flex items-end gap-3">
-      <form onSubmit={handleSubmit} className="w-full">
-        <Textarea
-          ref={textareaRef}
-          onKeyDown={handleKeyDown}
-          value={message}
-          placeholder="Write your message here..."
-          onChange={(e) => setMessage(e.target.value)}
-          className="resize-none border-0 ring-0 focus-visible:ring-0 bg-transparent max-h-[150px] overflow-y-auto scrollbar-thin"
+    <form onSubmit={handleSubmit} className="relative">
+      <Textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        placeholder={
+          isProcessingVoice 
+            ? "Processing voice..." 
+            : isGeneratingSuggestion 
+              ? "Generating suggestion..." 
+              : "Type your message..."
+        }
+        className={cn(
+          "min-h-[60px] pr-32 resize-none",
+          (isProcessingVoice || isGeneratingSuggestion) && "opacity-50"
+        )}
+        disabled={disabled || isProcessingVoice || isGeneratingSuggestion}
+      />
+      <div className="absolute right-2 bottom-2 flex gap-2">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={generateSuggestion}
+          disabled={disabled || isProcessingVoice || isGeneratingSuggestion || messages.length === 0}
+        >
+          <Sparkles className={cn(
+            "h-5 w-5",
+            isGeneratingSuggestion && "animate-pulse"
+          )} />
+        </Button>
+        <VoiceRecorder
+          onTranscription={handleVoiceTranscription}
+          disabled={disabled}
+          isProcessing={isProcessingVoice}
         />
-      </form>
-      <Button
-        onClick={handleSubmit}
-        disabled={loading}
-        variant="ghost"
-        size="icon"
-      >
-        <Send className="h-4 w-4" />
-      </Button>
-    </div>
-  );
+        <Button
+          type="submit"
+          size="icon"
+          disabled={disabled || !message.trim() || isProcessingVoice || isGeneratingSuggestion}
+        >
+          <SendHorizontal className="h-5 w-5" />
+        </Button>
+      </div>
+    </form>
+  )
 }

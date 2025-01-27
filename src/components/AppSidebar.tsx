@@ -29,6 +29,19 @@ export function AppSidebar() {
               Home
             </Button>
           </Link>
+          <Link to="/chat">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start text-base font-normal",
+                isActive("/chat") && "bg-sidebar-accent text-sidebar-accent-foreground"
+              )}
+            >
+              <MessageSquare className="mr-3 h-5 w-5" />
+              Chat
+            </Button>
+          </Link>
+          {isActive("/chat") && <ChatThreadList currentThreadId={threadId} />}
           <Link to="/voice-chat">
             <Button
               variant="ghost"
@@ -53,19 +66,6 @@ export function AppSidebar() {
               Quizzes
             </Button>
           </Link>
-          <Link to="/chat">
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start text-base font-normal",
-                isActive("/chat") && "bg-sidebar-accent text-sidebar-accent-foreground"
-              )}
-            >
-              <MessageSquare className="mr-3 h-5 w-5" />
-              Chat
-            </Button>
-          </Link>
-          {isActive("/chat") && <ChatThreadList currentThreadId={threadId} />}
         </nav>
       </div>
       <div className="p-4">
