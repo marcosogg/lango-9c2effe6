@@ -37,8 +37,15 @@ export function ChatInput({ onSend, disabled, messages = [] }: ChatInputProps) {
     try {
       setIsGeneratingSuggestion(true)
       
+      // Extract topic from the last few messages
+      const lastMessages = messages.slice(-3).map(msg => msg.content).join(" ")
+      const topic = lastMessages || "general conversation"
+      
       const { data, error } = await supabase.functions.invoke("generate-suggestion", {
-        body: { messages },
+        body: { 
+          topic,
+          messages 
+        },
       })
 
       if (error) throw error
