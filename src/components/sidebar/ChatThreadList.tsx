@@ -12,7 +12,7 @@ interface ChatThreadListProps {
 
 export function ChatThreadList({ currentThreadId }: ChatThreadListProps) {
   const navigate = useNavigate();
-  const { threads, createThread } = useChatThreads();
+  const { threads, createThread, updateThread, deleteThread } = useChatThreads();
 
   const handleCreateThread = async () => {
     const newThread = await createThread.mutateAsync();
