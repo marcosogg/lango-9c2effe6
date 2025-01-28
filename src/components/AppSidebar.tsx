@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Home, MessageSquare, Mic, GraduationCap } from "lucide-react";
+import { Home, MessageSquare, Mic, GraduationCap, Book } from "lucide-react";
 import { SignOut } from "./sidebar/SignOut";
 import { ChatThreadList } from "./sidebar/ChatThreadList";
 import { useSearchParams } from "react-router-dom";
+import { Badge } from "./ui/badge";
 
 export function AppSidebar() {
   const location = useLocation();
@@ -30,6 +31,19 @@ export function AppSidebar() {
                 Home
               </Button>
             </Link>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-base font-normal opacity-70"
+              disabled
+            >
+              <Book className="mr-3 h-5 w-5" />
+              <span className="flex items-center">
+                Expressions
+                <Badge variant="destructive" className="ml-2 h-5 px-1.5 text-[10px]">
+                  NEW
+                </Badge>
+              </span>
+            </Button>
             <Link to="/quizzes">
               <Button
                 variant="ghost"
